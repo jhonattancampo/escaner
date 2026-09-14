@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Banco de pruebas — lector de código de barras</title>
+<style>
+  :root{
+    --ink:#1B2430;
+    --ink-soft:#5A6675;
+    --rule:#D8DEE6;
+    --surface:#F2F5F8;
+    --paper:#FFFFFF;
+    --signal:#2D4EE0;
+    --pass:#0E7A4B;
+    --fail:#B42318;
+    --wait:#8A6D1F;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--surface);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:34rem;margin:0 auto;padding:1.5rem 1.15rem 4rem}
+  h1{font-size:1.45rem;line-height:1.2;letter-spacing:-0.02em;font-weight:650;margin:0 0 .4rem}
+  .lede{color:var(--ink-soft);margin:0 0 1.25rem;font-size:.95rem}
+  .banner{
+    border:1px solid var(--rule);border-left:3px solid var(--wait);
+    background:#FDF9EE;padding:.8rem .9rem;font-size:.88rem;margin:0 0 1.5rem;
+  }
+  .banner strong{display:block;margin-bottom:.15rem}
+  section{
+    background:var(--paper);border:1px solid var(--rule);border-left:3px solid var(--rule);
+    padding:1.1rem 1.1rem 1.25rem;margin-bottom:1.1rem;
+  }
+  section[data-state="pass"]{border-left-color:var(--pass)}
+  section[data-state="fail"]{border-left-color:var(--fail)}
+  section[data-state="wait"]{border-left-color:var(--wait)}
+  h2{font-size:1rem;font-weight:650;letter-spacing:-0.01em;margin:0 0 .15rem}
+  .sub{color:var(--ink-soft);font-size:.85rem;margin:0 0 .9rem}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.4rem .9rem;font-size:.9rem}
+  dt{color:var(--ink-soft)}
+  dd{margin:0;text-align:right;font-weight:550}
+  dd.v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;word-break:break-all;font-weight:500}
+  .pass{color:var(--pass)}.fail{color:var(--fail)}.wait{color:var(--wait)}
+  button,label.btn{
+    display:block;width:100%;background:var(--signal);color:#fff;border:0;border-radius:2px;
+    padding:.85rem 1rem;font:inherit;font-weight:600;font-size:.95rem;cursor:pointer;
+    text-align:center;-webkit-appearance:none;
+  }
+  button.quiet,label.btn.quiet{background:transparent;color:var(--signal);border:1px solid var(--rule)}
+  button:disabled{background:var(--rule);color:var(--ink-soft);cursor:default}
+  button+button,label.btn+button,button+label.btn{margin-top:.55rem}
+  input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+  video{width:100%;display:block;background:#000;border-radius:2px;margin-bottom:.75rem;aspect-ratio:4/3;object-fit:cover}
+  .hidden{display:none}
+  .msg{font-size:.88rem;padding:.7rem .8rem;border-radius:2px;background:var(--surface);margin:.8rem 0 0}
+  .msg.fail{background:#FDF2F1;color:var(--fail)}
+  .msg.pass{background:#EFF8F3;color:var(--pass)}
+  .msg strong{display:block;margin-bottom:.2rem}
+  .hit{border-top:1px solid var(--rule);padding:.7rem 0 .2rem;display:grid;grid-template-columns:1fr auto;gap:.15rem .8rem;align-items:baseline}
+  .hit .code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;font-weight:600;word-break:break-all}
+  .hit .meta{color:var(--ink-soft);font-size:.8rem;text-align:right}
+  .empty{color:var(--ink-soft);font-size:.9rem;margin:0}
+  footer{margin-top:2rem;color:var(--ink-soft);font-size:.82rem}
+  @media (prefers-reduced-motion:no-preference){
+    .flash{animation:f .5s ease-out}
+    @keyframes f{from{background:#EFF8F3}to{background:transparent}}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Banco de pruebas del lector</h1>
+  <p class="lede">Probá los dos métodos con productos reales y mandá el informe del final.</p>
+
+  <div class="banner" id="ctx"><strong>Verificando entorno…</strong></div>
+
+  <section id="cap" data-state="wait">
+    <h2>1. Qué soporta este teléfono</h2>
+    <p class="sub">Se mide solo al abrir la página.</p>
+    <dl>
+      <dt>Navegador</dt><dd class="v" id="c-ua">—</dd>
+      <dt>Conexión segura</dt><dd id="c-sec">—</dd>
+      <dt>Lector nativo</dt><dd id="c-bd">—</dd>
+      <dt>Formatos que lee</dt><dd class="v" id="c-fmt">—</dd>
+      <dt>Acceso a cámara</dt><dd id="c-gum">—</dd>
+      <dt>Lector de respaldo</dt><dd id="c-zx">cargando…</dd>
+    </dl>
+  </section>
+
+  <section id="live" data-state="wait">
+    <h2>2. Cámara en vivo</h2>
+    <p class="sub">Apuntá al código y esperá. Es la forma en que querés que funcione.</p>
+    <video id="vid" playsinline muted autoplay class="hidden"></video>
+    <button id="start">Encender cámara</button>
+    <button id="stop" class="quiet hidden">Apagar cámara</button>
+    <div id="live-msg"></div>
+  </section>
+
+  <section id="shot" data-state="wait">
+    <h2>3. Sacar una foto</h2>
+    <p class="sub">Abre la cámara del teléfono y lee el código de la foto. Funciona aunque el método 2 esté bloqueado.</p>
+    <label class="btn" for="file">Sacar foto del código</label>
+    <input type="file" id="file" accept="image/*" capture="environment">
+    <div id="shot-msg"></div>
+  </section>
+
+  <section id="hits">
+    <h2>4. Códigos leídos</h2>
+    <p class="sub">Comprobá que el número coincida con el impreso en el envase.</p>
+    <div id="hit-list"><p class="empty">Todavía no leyó ninguno.</p></div>
+  </section>
+
+  <section>
+    <h2>5. Informe</h2>
+    <p class="sub">Copialo y mandámelo.</p>
+    <button id="copy" class="quiet">Copiar informe</button>
+    <div id="copy-msg"></div>
+  </section>
+
+  <footer>Si algo falla, el informe dice qué y por qué. Eso también es un resultado.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var log = [], hits = [];
+  var zxReader = null, zxSource = null;
+  var stream = null, detector = null, timer = null, camStart = 0;
+
+  function note(l){ log.push(l); }
+  function mark(el, cls, txt){
+    el.textContent = txt;
+    el.className = (el.className.replace(/\b(pass|fail|wait)\b/g,'').trim()+' '+cls).trim();
+  }
+  function setState(id, s){ $(id).setAttribute('data-state', s); }
+  function msg(el, kind, title, body){
+    el.innerHTML='';
+    var d=document.createElement('div'); d.className='msg '+(kind||'');
+    var s=document.createElement('strong'); s.textContent=title; d.appendChild(s);
+    if(body) d.appendChild(document.createTextNode(body));
+    el.appendChild(d);
+  }
+
+  /* ---------- contexto ---------- */
+  var inFrame = (window.self !== window.top);
+  note('En iframe: ' + (inFrame?'sí':'no'));
+  $('ctx').innerHTML = inFrame
+    ? '<strong>Estás dentro de un artefacto</strong>La cámara en vivo (método 2) probablemente esté bloqueada por el sandbox. El método 3 sí es confiable acá. Para probar el método 2 de verdad hay que subir esta página a un dominio propio.'
+    : '<strong>Página independiente</strong>Los dos métodos son mediciones válidas de este teléfono.';
+  if(!inFrame){ $('ctx').style.borderLeftColor = 'var(--pass)'; $('ctx').style.background = '#EFF8F3'; }
+
+  /* ---------- 1. capacidades ---------- */
+  var ua = navigator.userAgent;
+  $('c-ua').textContent = ua.length>60 ? ua.slice(0,60)+'…' : ua;
+  note('User agent: ' + ua);
+
+  var secure = window.isSecureContext;
+  mark($('c-sec'), secure?'pass':'fail', secure?'sí':'no');
+  note('Contexto seguro: ' + (secure?'sí':'NO'));
+
+  var hasBD = ('BarcodeDetector' in window);
+  mark($('c-bd'), hasBD?'pass':'fail', hasBD?'disponible':'no existe');
+  note('BarcodeDetector nativo: ' + (hasBD?'disponible':'no existe'));
+
+  var hasGUM = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  mark($('c-gum'), hasGUM?'pass':'fail', hasGUM?'disponible':'no existe');
+  note('getUserMedia: ' + (hasGUM?'disponible':'no existe'));
+
+  if(hasBD){
+    window.BarcodeDetector.getSupportedFormats().then(function(f){
+      $('c-fmt').textContent = f.join(', ');
+      note('Formatos nativos: ' + f.join(', '));
+      var wanted = ['ean_13','ean_8','upc_a','upc_e','code_128'];
+      var ok = wanted.filter(function(w){ return f.indexOf(w)>=0; });
+      note('Formatos de retail presentes: ' + (ok.length?ok.join(', '):'NINGUNO'));
+      setState('cap', ok.length?'pass':'fail');
+      try{ detector = new window.BarcodeDetector({formats:f}); }
+      catch(e){ detector = new window.BarcodeDetector(); }
+    }).catch(function(e){
+      $('c-fmt').textContent='error'; note('getSupportedFormats falló: '+e); setState('cap','fail');
+    });
+  } else {
+    $('c-fmt').textContent='—';
+    note('Sin lector nativo: todo depende del respaldo ZXing.');
+  }
+
+  /* ---------- respaldo ZXing ---------- */
+  var sources = [
+    {url:'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js', glob:'ZXing'},
+    {url:'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js',            glob:'ZXing'},
+    {url:'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js', glob:'ZXingBrowser'},
+    {url:'https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js',     glob:'ZXingBrowser'}
+  ];
+
+  function loadZX(i){
+    if(i >= sources.length){
+      mark($('c-zx'), hasBD?'wait':'fail', 'no cargó');
+      note('ZXing: ningún CDN cargó. Si esto pasa dentro del artefacto, puede ser la política de seguridad del sandbox.');
+      if(!hasBD) setState('cap','fail');
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = sources[i].url;
+    s.onload = function(){
+      var g = window[sources[i].glob];
+      if(g && g.BrowserMultiFormatReader){
+        try{
+          zxReader = new g.BrowserMultiFormatReader();
+          zxSource = sources[i].url;
+          mark($('c-zx'),'pass','listo');
+          note('ZXing cargado desde: ' + zxSource);
+          if(!hasBD) setState('cap','wait');
+          return;
+        }catch(e){ note('ZXing instanció mal: '+e); }
+      }
+      loadZX(i+1);
+    };
+    s.onerror = function(){ note('ZXing no cargó: '+sources[i].url); loadZX(i+1); };
+    document.head.appendChild(s);
+  }
+  loadZX(0);
+
+  /* ---------- lecturas ---------- */
+  function addHit(code, format, source, ms){
+    hits.push({code:code,format:format,source:source,ms:ms});
+    note('LECTURA · ' + code + ' · ' + format + ' · ' + source + ' · ' + ms + 'ms');
+    var list = $('hit-list');
+    if(list.querySelector('.empty')) list.innerHTML='';
+    var row=document.createElement('div'); row.className='hit flash';
+    var c=document.createElement('div'); c.className='code'; c.textContent=code;
+    var m=document.createElement('div'); m.className='meta'; m.textContent=format+' · '+ms+' ms';
+    var s=document.createElement('div'); s.className='meta';
+    s.style.gridColumn='1/-1'; s.style.textAlign='left'; s.textContent=source;
+    row.appendChild(c); row.appendChild(m); row.appendChild(s);
+    list.insertBefore(row, list.firstChild);
+    if(navigator.vibrate) navigator.vibrate(60);
+  }
+
+  /* ---------- 2. cámara en vivo ---------- */
+  function interpret(err){
+    var n = (err && err.name) ? err.name : 'Error';
+    if(n==='NotAllowedError'){
+      return inFrame
+        ? ['Bloqueado por el sandbox','Nunca apareció el cartel de permiso porque esta página corre dentro de un artefacto. No dice nada sobre tu teléfono. Usá el método 3, o subí la página a un dominio propio para medirlo bien.']
+        : ['Permiso denegado','Rechazaste el permiso de cámara. Habilitalo en los ajustes del navegador para este sitio y volvé a probar.'];
+    }
+    if(n==='NotFoundError'||n==='OverconstrainedError') return ['No encontró cámara trasera','El teléfono no expuso una cámara utilizable.'];
+    if(n==='NotReadableError') return ['La cámara está ocupada','Otra app la está usando. Cerrala y reintentá.'];
+    return [n, (err&&err.message)?err.message:'Sin detalle.'];
+  }
+
+  function scanFrame(){
+    var v=$('vid');
+    if(!stream) return;
+    var next = function(){ timer = setTimeout(function(){ requestAnimationFrame(scanFrame); }, 120); };
+    if(v.readyState < 2){ next(); return; }
+
+    var onFound = function(code, fmt, via){
+      var ms = Math.round(performance.now()-camStart);
+      addHit(code, fmt, 'cámara en vivo · '+via, ms);
+      camStart = performance.now();
+      setState('live','pass');
+      msg($('live-msg'),'pass','Leyó bien','Probá con otros productos para confirmar que no fue casualidad.');
+    };
+
+    if(detector){
+      detector.detect(v).then(function(codes){
+        if(codes && codes.length) onFound(codes[0].rawValue, codes[0].format||'?', 'nativo');
+        next();
+      }).catch(function(){ next(); });
+    } else if(zxReader){
+      try{
+        zxReader.decodeOnceFromVideoElement(v).then(function(r){
+          onFound(r.getText(), String(r.getBarcodeFormat()), 'respaldo');
+          next();
+        }).catch(function(){ next(); });
+      }catch(e){ next(); }
+    } else { next(); }
+  }
+
+  $('start').addEventListener('click', function(){
+    if(!hasGUM){
+      setState('live','fail');
+      msg($('live-msg'),'fail','Este navegador no da acceso a la cámara','Probá el método 3.');
+      note('Cámara en vivo: getUserMedia no existe'); return;
+    }
+    $('start').disabled = true; $('start').textContent='Pidiendo permiso…';
+    navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false
+    }).then(function(s){
+      stream=s;
+      var v=$('vid'); v.srcObject=s; v.classList.remove('hidden');
+      $('start').classList.add('hidden'); $('stop').classList.remove('hidden');
+      camStart = performance.now();
+      note('Cámara en vivo: encendida');
+      if(!detector && !zxReader){
+        setState('live','fail');
+        msg($('live-msg'),'fail','Cámara sí, lector no','La cámara abre, pero no hay ni lector nativo ni respaldo cargado. No se puede decodificar.');
+      } else {
+        msg($('live-msg'),'','Apuntá al código de barras','A unos 15 cm, con buena luz, el código derecho.');
+        scanFrame();
+      }
+    }).catch(function(e){
+      $('start').disabled=false; $('start').textContent='Probar de nuevo';
+      setState('live','fail');
+      var i=interpret(e);
+      msg($('live-msg'),'fail',i[0],i[1]);
+      note('Cámara en vivo FALLÓ: ' + (e.name||'?') + ' — ' + (e.message||''));
+    });
+  });
+
+  $('stop').addEventListener('click', function(){
+    if(timer){ clearTimeout(timer); timer=null; }
+    if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
+    $('vid').classList.add('hidden'); $('stop').classList.add('hidden');
+    $('start').classList.remove('hidden'); $('start').disabled=false;
+    $('start').textContent='Encender cámara';
+  });
+
+  /* ---------- 3. foto (data URL, no blob) ---------- */
+  $('file').addEventListener('change', function(ev){
+    var f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    note('Foto: ' + f.type + ' · ' + Math.round(f.size/1024) + ' KB');
+    msg($('shot-msg'),'','Leyendo la foto…','');
+    var t0 = performance.now();
+
+    var reader = new FileReader();
+    reader.onerror = function(){
+      setState('shot','fail');
+      msg($('shot-msg'),'fail','No se pudo leer el archivo','Probá sacando la foto de nuevo.');
+      note('FileReader falló');
+    };
+    reader.onload = function(){
+      var img = new Image();
+      img.onload = function(){
+        note('Foto decodificada: ' + img.naturalWidth + 'x' + img.naturalHeight);
+        var done = function(code, fmt, via){
+          addHit(code, fmt, 'foto · '+via, Math.round(performance.now()-t0));
+          setState('shot','pass');
+          msg($('shot-msg'),'pass','Leyó bien','Comprobá que el número coincida con el del envase.');
+        };
+        var fail = function(why){
+          setState('shot','fail');
+          msg($('shot-msg'),'fail','No pudo leer el código', why);
+          note('Foto FALLÓ: ' + why);
+        };
+        if(detector){
+          detector.detect(img).then(function(codes){
+            if(codes && codes.length) done(codes[0].rawValue, codes[0].format||'?', 'lector nativo');
+            else if(zxReader) zxTry(img, done, fail);
+            else fail('El lector nativo no encontró código. Probá más cerca, con más luz y el código derecho.');
+          }).catch(function(e){
+            if(zxReader) zxTry(img, done, fail);
+            else fail('El lector nativo dio error: ' + (e.message||e));
+          });
+        } else if(zxReader){
+          zxTry(img, done, fail);
+        } else {
+          fail('Sin lector nativo y sin respaldo cargado. No se puede medir acá — mirá el bloque 1.');
+        }
+      };
+      img.onerror = function(){
+        setState('shot','fail');
+        msg($('shot-msg'),'fail','El navegador no pudo abrir esa imagen','Puede ser un formato que no soporta (HEIC). Probá cambiando la cámara a "Más compatible" en los ajustes del teléfono.');
+        note('Image decode falló para tipo: ' + f.type);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(f);
+  });
+
+  function zxTry(img, done, fail){
+    try{
+      zxReader.decodeFromImageElement(img).then(function(r){
+        done(r.getText(), String(r.getBarcodeFormat()), 'respaldo ZXing');
+      }).catch(function(){
+        fail('Ninguno de los lectores encontró un código. Probá más cerca, con más luz, y que el código entre entero y derecho en la foto.');
+      });
+    }catch(e){ fail('El respaldo dio error: ' + (e.message||e)); }
+  }
+
+  /* ---------- 5. informe ---------- */
+  $('copy').addEventListener('click', function(){
+    var out = 'INFORME — lector de código de barras\n';
+    out += new Date().toISOString() + '\n';
+    out += 'Pantalla: ' + window.innerWidth + 'x' + window.innerHeight + '\n\n';
+    out += log.join('\n');
+    out += '\n\nTotal de lecturas: ' + hits.length + '\n';
+    hits.forEach(function(h){ out += '  ' + h.code + ' (' + h.format + ', ' + h.ms + 'ms, ' + h.source + ')\n'; });
+
+    var fin = function(ok){
+      msg($('copy-msg'), ok?'pass':'fail', ok?'Copiado':'No se pudo copiar',
+        ok?'Pegalo en el chat.':'Sacale una captura a esta pantalla y al bloque 1.');
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(out).then(function(){fin(true);}).catch(function(){fin(false);});
+    } else fin(false);
+  });
+})();
+</script>
+</body>
+</html>
