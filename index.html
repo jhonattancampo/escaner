@@ -3,38 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Banco de pruebas — lector de código de barras</title>
+<title>Banco de pruebas — lector de código de barras v3</title>
 <style>
   :root{
-    --ink:#1B2430;
-    --ink-soft:#5A6675;
-    --rule:#D8DEE6;
-    --surface:#F2F5F8;
-    --paper:#FFFFFF;
-    --signal:#2D4EE0;
-    --pass:#0E7A4B;
-    --fail:#B42318;
-    --wait:#8A6D1F;
+    --ink:#1B2430;--ink-soft:#5A6675;--rule:#D8DEE6;--surface:#F2F5F8;--paper:#FFFFFF;
+    --signal:#2D4EE0;--pass:#0E7A4B;--fail:#B42318;--wait:#8A6D1F;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{
-    background:var(--surface);color:var(--ink);
+  body{background:var(--surface);color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;
-  }
+    font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
   .wrap{max-width:34rem;margin:0 auto;padding:1.5rem 1.15rem 4rem}
   h1{font-size:1.45rem;line-height:1.2;letter-spacing:-0.02em;font-weight:650;margin:0 0 .4rem}
   .lede{color:var(--ink-soft);margin:0 0 1.25rem;font-size:.95rem}
-  .banner{
-    border:1px solid var(--rule);border-left:3px solid var(--wait);
-    background:#FDF9EE;padding:.8rem .9rem;font-size:.88rem;margin:0 0 1.5rem;
-  }
+  .banner{border:1px solid var(--rule);border-left:3px solid var(--wait);background:#FDF9EE;
+    padding:.8rem .9rem;font-size:.88rem;margin:0 0 1.5rem}
   .banner strong{display:block;margin-bottom:.15rem}
-  section{
-    background:var(--paper);border:1px solid var(--rule);border-left:3px solid var(--rule);
-    padding:1.1rem 1.1rem 1.25rem;margin-bottom:1.1rem;
-  }
+  section{background:var(--paper);border:1px solid var(--rule);border-left:3px solid var(--rule);
+    padding:1.1rem 1.1rem 1.25rem;margin-bottom:1.1rem}
   section[data-state="pass"]{border-left-color:var(--pass)}
   section[data-state="fail"]{border-left-color:var(--fail)}
   section[data-state="wait"]{border-left-color:var(--wait)}
@@ -45,57 +32,71 @@
   dd{margin:0;text-align:right;font-weight:550}
   dd.v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;word-break:break-all;font-weight:500}
   .pass{color:var(--pass)}.fail{color:var(--fail)}.wait{color:var(--wait)}
-  button,label.btn{
-    display:block;width:100%;background:var(--signal);color:#fff;border:0;border-radius:2px;
-    padding:.85rem 1rem;font:inherit;font-weight:600;font-size:.95rem;cursor:pointer;
-    text-align:center;-webkit-appearance:none;
-  }
+  button,label.btn{display:block;width:100%;background:var(--signal);color:#fff;border:0;border-radius:2px;
+    padding:.85rem 1rem;font:inherit;font-weight:600;font-size:.95rem;cursor:pointer;text-align:center;-webkit-appearance:none}
   button.quiet,label.btn.quiet{background:transparent;color:var(--signal);border:1px solid var(--rule)}
   button:disabled{background:var(--rule);color:var(--ink-soft);cursor:default}
   button+button,label.btn+button,button+label.btn{margin-top:.55rem}
   input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
-  video{width:100%;display:block;background:#000;border-radius:2px;margin-bottom:.75rem;aspect-ratio:4/3;object-fit:cover}
+  .toggle{display:flex;align-items:center;gap:.6rem;font-size:.88rem;margin:0 0 .9rem;
+    padding:.6rem .7rem;background:var(--surface);border-radius:2px}
+  .toggle input{width:1.1rem;height:1.1rem;margin:0;flex:none}
+  .stage{position:relative;margin-bottom:.75rem}
+  video{width:100%;display:block;background:#000;border-radius:2px;aspect-ratio:4/3;object-fit:cover}
+  .band{position:absolute;left:4%;right:4%;top:30%;height:40%;border:2px solid rgba(255,255,255,.9);
+    border-radius:2px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}
+  .rate{position:absolute;left:.5rem;bottom:.5rem;background:rgba(0,0,0,.6);color:#fff;
+    font-family:ui-monospace,Menlo,monospace;font-size:.7rem;padding:.2rem .4rem;border-radius:2px}
   .hidden{display:none}
   .msg{font-size:.88rem;padding:.7rem .8rem;border-radius:2px;background:var(--surface);margin:.8rem 0 0}
   .msg.fail{background:#FDF2F1;color:var(--fail)}
   .msg.pass{background:#EFF8F3;color:var(--pass)}
   .msg strong{display:block;margin-bottom:.2rem}
-  .hit{border-top:1px solid var(--rule);padding:.7rem 0 .2rem;display:grid;grid-template-columns:1fr auto;gap:.15rem .8rem;align-items:baseline}
+  .hit{border-top:1px solid var(--rule);padding:.7rem 0 .2rem;display:grid;
+    grid-template-columns:1fr auto;gap:.15rem .8rem;align-items:baseline}
   .hit .code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;font-weight:600;word-break:break-all}
   .hit .meta{color:var(--ink-soft);font-size:.8rem;text-align:right}
+  .hit .fmt{font-weight:650}
   .empty{color:var(--ink-soft);font-size:.9rem;margin:0}
   footer{margin-top:2rem;color:var(--ink-soft);font-size:.82rem}
   @media (prefers-reduced-motion:no-preference){
-    .flash{animation:f .5s ease-out}
-    @keyframes f{from{background:#EFF8F3}to{background:transparent}}
+    .flash{animation:f .5s ease-out}@keyframes f{from{background:#EFF8F3}to{background:transparent}}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h1>Banco de pruebas del lector</h1>
-  <p class="lede">Probá los dos métodos con productos reales y mandá el informe del final.</p>
+  <h1>Banco de pruebas del lector v3</h1>
+  <p class="lede">Ahora restringido a códigos de barras de producto. El QR del envase ya no cuenta como éxito.</p>
 
   <div class="banner" id="ctx"><strong>Verificando entorno…</strong></div>
 
   <section id="cap" data-state="wait">
     <h2>1. Qué soporta este teléfono</h2>
-    <p class="sub">Se mide solo al abrir la página.</p>
     <dl>
       <dt>Navegador</dt><dd class="v" id="c-ua">—</dd>
       <dt>Conexión segura</dt><dd id="c-sec">—</dd>
       <dt>Lector nativo</dt><dd id="c-bd">—</dd>
-      <dt>Formatos que lee</dt><dd class="v" id="c-fmt">—</dd>
+      <dt>Formatos nativos</dt><dd class="v" id="c-fmt">—</dd>
       <dt>Acceso a cámara</dt><dd id="c-gum">—</dd>
-      <dt>Lector de respaldo</dt><dd id="c-zx">cargando…</dd>
+      <dt>Respaldo ZXing</dt><dd id="c-zx">cargando…</dd>
+      <dt>Motor en uso</dt><dd id="c-eng">—</dd>
     </dl>
   </section>
 
   <section id="live" data-state="wait">
     <h2>2. Cámara en vivo</h2>
-    <p class="sub">Apuntá al código y esperá. Es la forma en que querés que funcione.</p>
-    <video id="vid" playsinline muted autoplay class="hidden"></video>
+    <p class="sub">Encuadrá el código de barras dentro del recuadro, ocupando todo el ancho.</p>
+    <div class="toggle">
+      <input type="checkbox" id="only" checked>
+      <label for="only">Solo códigos de producto (ignorar QR)</label>
+    </div>
+    <div class="stage">
+      <video id="vid" playsinline muted autoplay class="hidden"></video>
+      <div class="band hidden" id="band"></div>
+      <div class="rate hidden" id="rate">—</div>
+    </div>
     <button id="start">Encender cámara</button>
     <button id="stop" class="quiet hidden">Apagar cámara</button>
     <div id="live-msg"></div>
@@ -103,7 +104,7 @@
 
   <section id="shot" data-state="wait">
     <h2>3. Sacar una foto</h2>
-    <p class="sub">Abre la cámara del teléfono y lee el código de la foto. Funciona aunque el método 2 esté bloqueado.</p>
+    <p class="sub">Acercate al código de barras, que ocupe casi todo el ancho de la foto.</p>
     <label class="btn" for="file">Sacar foto del código</label>
     <input type="file" id="file" accept="image/*" capture="environment">
     <div id="shot-msg"></div>
@@ -111,297 +112,297 @@
 
   <section id="hits">
     <h2>4. Códigos leídos</h2>
-    <p class="sub">Comprobá que el número coincida con el impreso en el envase.</p>
+    <p class="sub">El formato tiene que decir EAN_13 o similar. Si dice QR_CODE, no sirve.</p>
     <div id="hit-list"><p class="empty">Todavía no leyó ninguno.</p></div>
   </section>
 
   <section>
     <h2>5. Informe</h2>
-    <p class="sub">Copialo y mandámelo.</p>
     <button id="copy" class="quiet">Copiar informe</button>
     <div id="copy-msg"></div>
   </section>
 
-  <footer>Si algo falla, el informe dice qué y por qué. Eso también es un resultado.</footer>
+  <footer>Si un envase no se lee nunca, anotá cuál. Eso también es dato.</footer>
 </div>
 
 <script>
 (function(){
   "use strict";
-  var $ = function(id){ return document.getElementById(id); };
-  var log = [], hits = [];
-  var zxReader = null, zxSource = null;
-  var stream = null, detector = null, timer = null, camStart = 0;
+  var $=function(i){return document.getElementById(i);};
+  var log=[],hits=[];
+  var ZX=null, zxReader=null;
+  var detector=null, hasBD=('BarcodeDetector' in window);
+  var stream=null, timer=null, busy=false, camStart=0, attempts=0, rateT=0;
+  var cv=document.createElement('canvas'), ctx=cv.getContext('2d',{willReadFrequently:true});
 
-  function note(l){ log.push(l); }
-  function mark(el, cls, txt){
-    el.textContent = txt;
-    el.className = (el.className.replace(/\b(pass|fail|wait)\b/g,'').trim()+' '+cls).trim();
-  }
-  function setState(id, s){ $(id).setAttribute('data-state', s); }
-  function msg(el, kind, title, body){
-    el.innerHTML='';
-    var d=document.createElement('div'); d.className='msg '+(kind||'');
-    var s=document.createElement('strong'); s.textContent=title; d.appendChild(s);
-    if(body) d.appendChild(document.createTextNode(body));
-    el.appendChild(d);
-  }
+  function note(l){log.push(l);}
+  function mark(el,c,t){el.textContent=t;el.className=(el.className.replace(/\b(pass|fail|wait)\b/g,'').trim()+' '+c).trim();}
+  function setState(i,s){$(i).setAttribute('data-state',s);}
+  function msg(el,k,t,b){el.innerHTML='';var d=document.createElement('div');d.className='msg '+(k||'');
+    var s=document.createElement('strong');s.textContent=t;d.appendChild(s);
+    if(b)d.appendChild(document.createTextNode(b));el.appendChild(d);}
 
-  /* ---------- contexto ---------- */
-  var inFrame = (window.self !== window.top);
-  note('En iframe: ' + (inFrame?'sí':'no'));
-  $('ctx').innerHTML = inFrame
-    ? '<strong>Estás dentro de un artefacto</strong>La cámara en vivo (método 2) probablemente esté bloqueada por el sandbox. El método 3 sí es confiable acá. Para probar el método 2 de verdad hay que subir esta página a un dominio propio.'
-    : '<strong>Página independiente</strong>Los dos métodos son mediciones válidas de este teléfono.';
-  if(!inFrame){ $('ctx').style.borderLeftColor = 'var(--pass)'; $('ctx').style.background = '#EFF8F3'; }
+  /* contexto */
+  var inFrame=(window.self!==window.top);
+  note('En iframe: '+(inFrame?'sí':'no'));
+  $('ctx').innerHTML=inFrame
+    ?'<strong>Dentro de un artefacto</strong>La cámara en vivo va a estar bloqueada. Subí la página a un dominio propio para medirla.'
+    :'<strong>Página independiente</strong>Las dos mediciones son válidas para este teléfono.';
+  if(!inFrame){$('ctx').style.borderLeftColor='var(--pass)';$('ctx').style.background='#EFF8F3';}
 
-  /* ---------- 1. capacidades ---------- */
-  var ua = navigator.userAgent;
-  $('c-ua').textContent = ua.length>60 ? ua.slice(0,60)+'…' : ua;
-  note('User agent: ' + ua);
-
-  var secure = window.isSecureContext;
-  mark($('c-sec'), secure?'pass':'fail', secure?'sí':'no');
-  note('Contexto seguro: ' + (secure?'sí':'NO'));
-
-  var hasBD = ('BarcodeDetector' in window);
-  mark($('c-bd'), hasBD?'pass':'fail', hasBD?'disponible':'no existe');
-  note('BarcodeDetector nativo: ' + (hasBD?'disponible':'no existe'));
-
-  var hasGUM = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-  mark($('c-gum'), hasGUM?'pass':'fail', hasGUM?'disponible':'no existe');
-  note('getUserMedia: ' + (hasGUM?'disponible':'no existe'));
+  /* capacidades */
+  var ua=navigator.userAgent;
+  $('c-ua').textContent=ua.length>60?ua.slice(0,60)+'…':ua;
+  note('User agent: '+ua);
+  var secure=window.isSecureContext;
+  mark($('c-sec'),secure?'pass':'fail',secure?'sí':'no');
+  note('Contexto seguro: '+(secure?'sí':'NO'));
+  mark($('c-bd'),hasBD?'pass':'fail',hasBD?'disponible':'no existe');
+  note('BarcodeDetector nativo: '+(hasBD?'disponible':'no existe'));
+  var hasGUM=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  mark($('c-gum'),hasGUM?'pass':'fail',hasGUM?'disponible':'no existe');
+  note('getUserMedia: '+(hasGUM?'disponible':'no existe'));
 
   if(hasBD){
     window.BarcodeDetector.getSupportedFormats().then(function(f){
-      $('c-fmt').textContent = f.join(', ');
-      note('Formatos nativos: ' + f.join(', '));
-      var wanted = ['ean_13','ean_8','upc_a','upc_e','code_128'];
-      var ok = wanted.filter(function(w){ return f.indexOf(w)>=0; });
-      note('Formatos de retail presentes: ' + (ok.length?ok.join(', '):'NINGUNO'));
-      setState('cap', ok.length?'pass':'fail');
-      try{ detector = new window.BarcodeDetector({formats:f}); }
-      catch(e){ detector = new window.BarcodeDetector(); }
-    }).catch(function(e){
-      $('c-fmt').textContent='error'; note('getSupportedFormats falló: '+e); setState('cap','fail');
-    });
-  } else {
-    $('c-fmt').textContent='—';
-    note('Sin lector nativo: todo depende del respaldo ZXing.');
+      $('c-fmt').textContent=f.join(', ');
+      note('Formatos nativos: '+f.join(', '));
+      var keep=['ean_13','ean_8','upc_a','upc_e','code_128','itf'];
+      var use=f.filter(function(x){return keep.indexOf(x)>=0;});
+      note('Formatos de producto nativos: '+(use.length?use.join(', '):'NINGUNO'));
+      if(use.length){ try{detector=new window.BarcodeDetector({formats:use});}catch(e){} }
+      engine();
+    }).catch(function(){ $('c-fmt').textContent='error'; engine(); });
+  } else { $('c-fmt').textContent='—'; }
+
+  function engine(){
+    var e = detector ? 'nativo' : (zxReader ? 'ZXing (JS)' : 'ninguno');
+    mark($('c-eng'), detector?'pass':(zxReader?'wait':'fail'), e);
+    setState('cap', detector?'pass':(zxReader?'wait':'fail'));
   }
 
-  /* ---------- respaldo ZXing ---------- */
-  var sources = [
-    {url:'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js', glob:'ZXing'},
-    {url:'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js',            glob:'ZXing'},
-    {url:'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js', glob:'ZXingBrowser'},
-    {url:'https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js',     glob:'ZXingBrowser'}
+  /* ZXing */
+  var sources=[
+    {url:'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js',glob:'ZXing'},
+    {url:'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js',glob:'ZXing'}
   ];
-
+  function buildReader(){
+    if(!ZX) return;
+    var hints=new Map(), F=ZX.BarcodeFormat, D=ZX.DecodeHintType;
+    var f=[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.CODE_39,F.ITF];
+    if(!$('only').checked) f.push(F.QR_CODE, F.DATA_MATRIX);
+    hints.set(D.POSSIBLE_FORMATS,f);
+    hints.set(D.TRY_HARDER,true);
+    zxReader=new ZX.BrowserMultiFormatReader(hints,80);
+  }
   function loadZX(i){
-    if(i >= sources.length){
-      mark($('c-zx'), hasBD?'wait':'fail', 'no cargó');
-      note('ZXing: ningún CDN cargó. Si esto pasa dentro del artefacto, puede ser la política de seguridad del sandbox.');
-      if(!hasBD) setState('cap','fail');
-      return;
-    }
-    var s = document.createElement('script');
-    s.src = sources[i].url;
-    s.onload = function(){
-      var g = window[sources[i].glob];
-      if(g && g.BrowserMultiFormatReader){
-        try{
-          zxReader = new g.BrowserMultiFormatReader();
-          zxSource = sources[i].url;
-          mark($('c-zx'),'pass','listo');
-          note('ZXing cargado desde: ' + zxSource);
-          if(!hasBD) setState('cap','wait');
-          return;
-        }catch(e){ note('ZXing instanció mal: '+e); }
+    if(i>=sources.length){mark($('c-zx'),hasBD?'wait':'fail','no cargó');note('ZXing: ningún CDN cargó');engine();return;}
+    var s=document.createElement('script'); s.src=sources[i].url;
+    s.onload=function(){
+      var g=window[sources[i].glob];
+      if(g&&g.BrowserMultiFormatReader){
+        ZX=g;
+        try{ buildReader(); mark($('c-zx'),'pass','listo'); note('ZXing desde: '+sources[i].url); engine(); return; }
+        catch(e){ note('ZXing instanció mal: '+e); }
       }
       loadZX(i+1);
     };
-    s.onerror = function(){ note('ZXing no cargó: '+sources[i].url); loadZX(i+1); };
+    s.onerror=function(){note('ZXing no cargó: '+sources[i].url);loadZX(i+1);};
     document.head.appendChild(s);
   }
   loadZX(0);
 
-  /* ---------- lecturas ---------- */
-  function addHit(code, format, source, ms){
-    hits.push({code:code,format:format,source:source,ms:ms});
-    note('LECTURA · ' + code + ' · ' + format + ' · ' + source + ' · ' + ms + 'ms');
-    var list = $('hit-list');
-    if(list.querySelector('.empty')) list.innerHTML='';
+  $('only').addEventListener('change',function(){
+    buildReader();
+    note('Filtro "solo productos": '+($('only').checked?'activado':'desactivado'));
+  });
+
+  function fmtName(v){
+    if(typeof v==='string') return v.toUpperCase();
+    if(ZX&&ZX.BarcodeFormat&&ZX.BarcodeFormat[v]) return ZX.BarcodeFormat[v];
+    return String(v);
+  }
+  var PRODUCT=/EAN_13|EAN_8|UPC_A|UPC_E|CODE_128|CODE_39|ITF/;
+
+  /* lecturas */
+  function addHit(code,fmtRaw,source,ms){
+    var fmt=fmtName(fmtRaw);
+    var good=PRODUCT.test(fmt);
+    hits.push({code:code,format:fmt,source:source,ms:ms,good:good});
+    note('LECTURA · '+code+' · '+fmt+(good?'':' (NO ES CÓDIGO DE PRODUCTO)')+' · '+source+' · '+ms+'ms');
+    var list=$('hit-list'); if(list.querySelector('.empty'))list.innerHTML='';
     var row=document.createElement('div'); row.className='hit flash';
     var c=document.createElement('div'); c.className='code'; c.textContent=code;
-    var m=document.createElement('div'); m.className='meta'; m.textContent=format+' · '+ms+' ms';
+    var m=document.createElement('div'); m.className='meta';
+    var f=document.createElement('span'); f.className='fmt '+(good?'pass':'fail'); f.textContent=fmt;
+    m.appendChild(f); m.appendChild(document.createTextNode(' · '+ms+' ms'));
     var s=document.createElement('div'); s.className='meta';
     s.style.gridColumn='1/-1'; s.style.textAlign='left'; s.textContent=source;
-    row.appendChild(c); row.appendChild(m); row.appendChild(s);
-    list.insertBefore(row, list.firstChild);
-    if(navigator.vibrate) navigator.vibrate(60);
+    row.appendChild(c);row.appendChild(m);row.appendChild(s);
+    list.insertBefore(row,list.firstChild);
+    if(navigator.vibrate)navigator.vibrate(60);
+    return good;
   }
 
-  /* ---------- 2. cámara en vivo ---------- */
-  function interpret(err){
-    var n = (err && err.name) ? err.name : 'Error';
-    if(n==='NotAllowedError'){
-      return inFrame
-        ? ['Bloqueado por el sandbox','Nunca apareció el cartel de permiso porque esta página corre dentro de un artefacto. No dice nada sobre tu teléfono. Usá el método 3, o subí la página a un dominio propio para medirlo bien.']
-        : ['Permiso denegado','Rechazaste el permiso de cámara. Habilitalo en los ajustes del navegador para este sitio y volvé a probar.'];
-    }
+  /* decodificación sobre canvas */
+  function decodeCanvas(canvas){
+    return new Promise(function(res){
+      if(detector){
+        detector.detect(canvas).then(function(cs){
+          res(cs&&cs.length?{text:cs[0].rawValue,fmt:cs[0].format,via:'nativo'}:null);
+        }).catch(function(){res(null);});
+        return;
+      }
+      if(!zxReader){res(null);return;}
+      if(typeof zxReader.decodeFromCanvas==='function'){
+        try{ var r=zxReader.decodeFromCanvas(canvas);
+          res(r?{text:r.getText(),fmt:r.getBarcodeFormat(),via:'ZXing canvas'}:null); }
+        catch(e){ res(null); }
+        return;
+      }
+      zxReader.decodeFromImageUrl(canvas.toDataURL('image/jpeg',0.9)).then(function(r){
+        res({text:r.getText(),fmt:r.getBarcodeFormat(),via:'ZXing dataURL'});
+      }).catch(function(){res(null);});
+    });
+  }
+
+  /* 2. cámara en vivo */
+  function interpret(e){
+    var n=(e&&e.name)?e.name:'Error';
+    if(n==='NotAllowedError') return inFrame
+      ?['Bloqueado por el sandbox','Nunca apareció el cartel de permiso. No dice nada del teléfono.']
+      :['Permiso denegado','Habilitá la cámara para este sitio en los ajustes de Safari y reintentá.'];
     if(n==='NotFoundError'||n==='OverconstrainedError') return ['No encontró cámara trasera','El teléfono no expuso una cámara utilizable.'];
-    if(n==='NotReadableError') return ['La cámara está ocupada','Otra app la está usando. Cerrala y reintentá.'];
-    return [n, (err&&err.message)?err.message:'Sin detalle.'];
+    if(n==='NotReadableError') return ['La cámara está ocupada','Cerrá otras apps que la usen.'];
+    return [n,(e&&e.message)?e.message:'Sin detalle.'];
   }
 
-  function scanFrame(){
-    var v=$('vid');
+  function loop(){
     if(!stream) return;
-    var next = function(){ timer = setTimeout(function(){ requestAnimationFrame(scanFrame); }, 120); };
-    if(v.readyState < 2){ next(); return; }
+    var v=$('vid');
+    var again=function(){ timer=setTimeout(function(){requestAnimationFrame(loop);},60); };
+    if(v.readyState<2||busy){ again(); return; }
 
-    var onFound = function(code, fmt, via){
-      var ms = Math.round(performance.now()-camStart);
-      addHit(code, fmt, 'cámara en vivo · '+via, ms);
-      camStart = performance.now();
-      setState('live','pass');
-      msg($('live-msg'),'pass','Leyó bien','Probá con otros productos para confirmar que no fue casualidad.');
-    };
+    var vw=v.videoWidth, vh=v.videoHeight;
+    if(!vw){ again(); return; }
+    var bandH=Math.round(vh*0.40), sy=Math.round((vh-bandH)/2);
+    var sx=Math.round(vw*0.04), sw=vw-sx*2;
+    var scale=Math.min(1,900/sw);
+    cv.width=Math.round(sw*scale); cv.height=Math.round(bandH*scale);
+    ctx.drawImage(v,sx,sy,sw,bandH,0,0,cv.width,cv.height);
 
-    if(detector){
-      detector.detect(v).then(function(codes){
-        if(codes && codes.length) onFound(codes[0].rawValue, codes[0].format||'?', 'nativo');
-        next();
-      }).catch(function(){ next(); });
-    } else if(zxReader){
-      try{
-        zxReader.decodeOnceFromVideoElement(v).then(function(r){
-          onFound(r.getText(), String(r.getBarcodeFormat()), 'respaldo');
-          next();
-        }).catch(function(){ next(); });
-      }catch(e){ next(); }
-    } else { next(); }
+    busy=true; attempts++;
+    var now=performance.now();
+    if(now-rateT>1000){ $('rate').textContent=attempts+' intentos · '+Math.round((now-camStart)/1000)+'s'; rateT=now; }
+
+    decodeCanvas(cv).then(function(r){
+      busy=false;
+      if(r){
+        var ms=Math.round(performance.now()-camStart);
+        var good=addHit(r.text,r.fmt,'cámara en vivo · '+r.via+' · '+attempts+' intentos',ms);
+        camStart=performance.now(); attempts=0;
+        setState('live',good?'pass':'wait');
+        if(good) msg($('live-msg'),'pass','Leyó un código de producto','Probá con otros envases para confirmar.');
+        else msg($('live-msg'),'','Leyó, pero no es código de producto','Activá el filtro de arriba y apuntá solo al código de barras.');
+      }
+      again();
+    });
   }
 
-  $('start').addEventListener('click', function(){
-    if(!hasGUM){
-      setState('live','fail');
-      msg($('live-msg'),'fail','Este navegador no da acceso a la cámara','Probá el método 3.');
-      note('Cámara en vivo: getUserMedia no existe'); return;
-    }
-    $('start').disabled = true; $('start').textContent='Pidiendo permiso…';
+  $('start').addEventListener('click',function(){
+    if(!hasGUM){setState('live','fail');msg($('live-msg'),'fail','Sin acceso a cámara','Probá el método 3.');return;}
+    if(!detector&&!zxReader){setState('live','fail');msg($('live-msg'),'fail','Sin motor de lectura','Mirá el bloque 1.');return;}
+    $('start').disabled=true;$('start').textContent='Pidiendo permiso…';
     navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false
+      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false
     }).then(function(s){
       stream=s;
       var v=$('vid'); v.srcObject=s; v.classList.remove('hidden');
+      $('band').classList.remove('hidden'); $('rate').classList.remove('hidden');
       $('start').classList.add('hidden'); $('stop').classList.remove('hidden');
-      camStart = performance.now();
-      note('Cámara en vivo: encendida');
-      if(!detector && !zxReader){
-        setState('live','fail');
-        msg($('live-msg'),'fail','Cámara sí, lector no','La cámara abre, pero no hay ni lector nativo ni respaldo cargado. No se puede decodificar.');
-      } else {
-        msg($('live-msg'),'','Apuntá al código de barras','A unos 15 cm, con buena luz, el código derecho.');
-        scanFrame();
-      }
+      camStart=performance.now(); attempts=0; busy=false;
+      var tr=s.getVideoTracks()[0], st=tr?tr.getSettings():{};
+      note('Cámara encendida: '+(st.width||'?')+'x'+(st.height||'?'));
+      msg($('live-msg'),'','Encuadrá el código en el recuadro','Que ocupe todo el ancho. Distancia 10-20 cm, buena luz.');
+      loop();
     }).catch(function(e){
-      $('start').disabled=false; $('start').textContent='Probar de nuevo';
+      $('start').disabled=false;$('start').textContent='Probar de nuevo';
       setState('live','fail');
-      var i=interpret(e);
-      msg($('live-msg'),'fail',i[0],i[1]);
-      note('Cámara en vivo FALLÓ: ' + (e.name||'?') + ' — ' + (e.message||''));
+      var i=interpret(e); msg($('live-msg'),'fail',i[0],i[1]);
+      note('Cámara FALLÓ: '+(e.name||'?')+' — '+(e.message||''));
     });
   });
 
-  $('stop').addEventListener('click', function(){
-    if(timer){ clearTimeout(timer); timer=null; }
-    if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
-    $('vid').classList.add('hidden'); $('stop').classList.add('hidden');
-    $('start').classList.remove('hidden'); $('start').disabled=false;
-    $('start').textContent='Encender cámara';
+  $('stop').addEventListener('click',function(){
+    if(timer){clearTimeout(timer);timer=null;}
+    if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
+    $('vid').classList.add('hidden');$('band').classList.add('hidden');$('rate').classList.add('hidden');
+    $('stop').classList.add('hidden');$('start').classList.remove('hidden');
+    $('start').disabled=false;$('start').textContent='Encender cámara';
   });
 
-  /* ---------- 3. foto (data URL, no blob) ---------- */
-  $('file').addEventListener('change', function(ev){
-    var f = ev.target.files && ev.target.files[0];
-    if(!f) return;
-    note('Foto: ' + f.type + ' · ' + Math.round(f.size/1024) + ' KB');
+  /* 3. foto */
+  $('file').addEventListener('change',function(ev){
+    var f=ev.target.files&&ev.target.files[0];
+    if(!f)return;
+    note('Foto: '+f.type+' · '+Math.round(f.size/1024)+' KB');
     msg($('shot-msg'),'','Leyendo la foto…','');
-    var t0 = performance.now();
-
-    var reader = new FileReader();
-    reader.onerror = function(){
-      setState('shot','fail');
-      msg($('shot-msg'),'fail','No se pudo leer el archivo','Probá sacando la foto de nuevo.');
-      note('FileReader falló');
-    };
-    reader.onload = function(){
-      var img = new Image();
-      img.onload = function(){
-        note('Foto decodificada: ' + img.naturalWidth + 'x' + img.naturalHeight);
-        var done = function(code, fmt, via){
-          addHit(code, fmt, 'foto · '+via, Math.round(performance.now()-t0));
-          setState('shot','pass');
-          msg($('shot-msg'),'pass','Leyó bien','Comprobá que el número coincida con el del envase.');
-        };
-        var fail = function(why){
-          setState('shot','fail');
-          msg($('shot-msg'),'fail','No pudo leer el código', why);
-          note('Foto FALLÓ: ' + why);
-        };
-        if(detector){
-          detector.detect(img).then(function(codes){
-            if(codes && codes.length) done(codes[0].rawValue, codes[0].format||'?', 'lector nativo');
-            else if(zxReader) zxTry(img, done, fail);
-            else fail('El lector nativo no encontró código. Probá más cerca, con más luz y el código derecho.');
-          }).catch(function(e){
-            if(zxReader) zxTry(img, done, fail);
-            else fail('El lector nativo dio error: ' + (e.message||e));
+    var t0=performance.now();
+    var rd=new FileReader();
+    rd.onerror=function(){setState('shot','fail');msg($('shot-msg'),'fail','No se pudo leer el archivo','Probá de nuevo.');};
+    rd.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        note('Foto: '+img.naturalWidth+'x'+img.naturalHeight);
+        var passes=[{n:'completa',z:1},{n:'centro 2x',z:2},{n:'centro 3x',z:3}];
+        var i=0;
+        var tryPass=function(){
+          if(i>=passes.length){
+            setState('shot','fail');
+            msg($('shot-msg'),'fail','No encontró código de producto',
+              'Probé la foto entera y dos recortes del centro. Acercate más: el código tiene que ocupar casi todo el ancho.');
+            note('Foto FALLÓ tras '+passes.length+' pasadas');
+            return;
+          }
+          var p=passes[i++];
+          var sw=img.naturalWidth/p.z, sh=img.naturalHeight/p.z;
+          var sx=(img.naturalWidth-sw)/2, sy=(img.naturalHeight-sh)/2;
+          var sc=Math.min(1,1600/sw);
+          cv.width=Math.round(sw*sc); cv.height=Math.round(sh*sc);
+          ctx.drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
+          decodeCanvas(cv).then(function(r){
+            if(r){
+              var good=addHit(r.text,r.fmt,'foto · '+p.n+' · '+r.via,Math.round(performance.now()-t0));
+              setState('shot',good?'pass':'wait');
+              if(good) msg($('shot-msg'),'pass','Leyó un código de producto','Verificá que coincida con el impreso en el envase.');
+              else msg($('shot-msg'),'','No es código de producto','Activá el filtro del bloque 2 y sacá la foto solo del código de barras.');
+            } else { tryPass(); }
           });
-        } else if(zxReader){
-          zxTry(img, done, fail);
-        } else {
-          fail('Sin lector nativo y sin respaldo cargado. No se puede medir acá — mirá el bloque 1.');
-        }
+        };
+        tryPass();
       };
-      img.onerror = function(){
+      img.onerror=function(){
         setState('shot','fail');
-        msg($('shot-msg'),'fail','El navegador no pudo abrir esa imagen','Puede ser un formato que no soporta (HEIC). Probá cambiando la cámara a "Más compatible" en los ajustes del teléfono.');
-        note('Image decode falló para tipo: ' + f.type);
+        msg($('shot-msg'),'fail','El navegador no pudo abrir la imagen','Puede ser HEIC. Ajustes → Cámara → Formatos → Más compatible.');
+        note('Image decode falló, tipo: '+f.type);
       };
-      img.src = reader.result;
+      img.src=rd.result;
     };
-    reader.readAsDataURL(f);
+    rd.readAsDataURL(f);
   });
 
-  function zxTry(img, done, fail){
-    try{
-      zxReader.decodeFromImageElement(img).then(function(r){
-        done(r.getText(), String(r.getBarcodeFormat()), 'respaldo ZXing');
-      }).catch(function(){
-        fail('Ninguno de los lectores encontró un código. Probá más cerca, con más luz, y que el código entre entero y derecho en la foto.');
-      });
-    }catch(e){ fail('El respaldo dio error: ' + (e.message||e)); }
-  }
-
-  /* ---------- 5. informe ---------- */
-  $('copy').addEventListener('click', function(){
-    var out = 'INFORME — lector de código de barras\n';
-    out += new Date().toISOString() + '\n';
-    out += 'Pantalla: ' + window.innerWidth + 'x' + window.innerHeight + '\n\n';
-    out += log.join('\n');
-    out += '\n\nTotal de lecturas: ' + hits.length + '\n';
-    hits.forEach(function(h){ out += '  ' + h.code + ' (' + h.format + ', ' + h.ms + 'ms, ' + h.source + ')\n'; });
-
-    var fin = function(ok){
-      msg($('copy-msg'), ok?'pass':'fail', ok?'Copiado':'No se pudo copiar',
-        ok?'Pegalo en el chat.':'Sacale una captura a esta pantalla y al bloque 1.');
-    };
-    if(navigator.clipboard && navigator.clipboard.writeText){
+  /* informe */
+  $('copy').addEventListener('click',function(){
+    var out='INFORME v3 — lector de código de barras\n'+new Date().toISOString()+'\n';
+    out+='Pantalla: '+window.innerWidth+'x'+window.innerHeight+'\n\n'+log.join('\n');
+    var good=hits.filter(function(h){return h.good;}).length;
+    out+='\n\nLecturas: '+hits.length+' (de producto: '+good+')\n';
+    hits.forEach(function(h){out+='  '+h.code+' · '+h.format+' · '+h.ms+'ms · '+h.source+'\n';});
+    var fin=function(ok){msg($('copy-msg'),ok?'pass':'fail',ok?'Copiado':'No se pudo copiar',
+      ok?'Pegalo en el chat.':'Sacale captura a esta pantalla y al bloque 1.');};
+    if(navigator.clipboard&&navigator.clipboard.writeText)
       navigator.clipboard.writeText(out).then(function(){fin(true);}).catch(function(){fin(false);});
-    } else fin(false);
+    else fin(false);
   });
 })();
 </script>
